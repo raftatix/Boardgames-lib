@@ -1,5 +1,8 @@
-# Stage 1 — build React
-FROM node:20-alpine AS build
+# Build React
+FROM node:22-alpine AS build
+
+# Update Alpine packages to reduce vulnerabilities
+RUN apk update && apk upgrade
 
 WORKDIR /app
 COPY ../../frontend/package*.json .
@@ -7,13 +10,3 @@ RUN npm install
 
 COPY ../../frontend/* ./
 RUN npm run build
-
-# Stage 2 — nginx
-FROM nginx:1.25-alpine
-
-RUN rm -rf /etc/nginx/conf.d/*
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-COPY --from=build /app/build /usr/share/nginx/html
-
-CMD ["nginx", "-g", "daemon off;"]
