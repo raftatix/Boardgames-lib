@@ -1,0 +1,48 @@
+name: Commit Issue_ID Check
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  commit-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Issue_ID in commits
+        run: |
+          echo "Checking commits for Issue_ID..."
+
+          ISSUE_REGEX="Issue_ID: gh-[0-9]+"
+          FAIL=0
+
+          # sprawdzamy ostatnie commity w push/PR
+          for COMMIT in $(git log -n 20 --pretty=format:"%H"); do
+            MESSAGE=$(git log -1 --pretty=%B $COMMIT)
+
+            echo "Checking commit:"
+            echo "$MESSAGE"
+
+            if [[ ! $MESSAGE =~ $ISSUE_REGEX ]]; then
+              echo "❌ Commit does not contain required Issue_ID (Issue_ID: gh-x)"
+              FAIL=1
+            else
+              echo "✅ Issue_ID found"
+            fi
+
+            echo "--------------------------------"
+          done
+
+          if [ $FAIL -eq 1 ]; then
+            echo "🚫 Commit validation failed"
+            exit 1
+          fi
