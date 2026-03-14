@@ -1,9 +1,6 @@
 name: Commit Issue_ID Check
 
 on:
-  push:
-    branches:
-      - "**"
   pull_request:
     branches:
       - "**"
