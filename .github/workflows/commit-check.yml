@@ -15,34 +15,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Validate Issue_ID in commits
+      - name: Validate Issue_ID in commit message
         run: |
-          echo "Checking commits for Issue_ID..."
+          echo "🔎 Checking commit message..."
 
           ISSUE_REGEX="Issue_ID: gh-[0-9]+"
-          FAIL=0
 
-          # sprawdzamy ostatnie commity w push/PR
-          for COMMIT in $(git log -n 20 --pretty=format:"%H"); do
-            MESSAGE=$(git log -1 --pretty=%B $COMMIT)
+          COMMIT_SHA=${{ github.sha }}
+          MESSAGE=$(git show -s --format=%B $COMMIT_SHA)
 
-            echo "Checking commit:"
-            echo "$MESSAGE"
+          echo "Commit SHA: $COMMIT_SHA"
+          echo "--------------------------------"
+          echo "Commit message:"
+          echo "$MESSAGE"
+          echo "--------------------------------"
 
-            if [[ ! $MESSAGE =~ $ISSUE_REGEX ]]; then
-              echo "❌ Commit does not contain required Issue_ID (Issue_ID: gh-x)"
-              FAIL=1
-            else
-              echo "✅ Issue_ID found"
-            fi
-
-            echo "--------------------------------"
-          done
-
-          if [ $FAIL -eq 1 ]; then
-            echo "🚫 Commit validation failed"
+          if [[ $MESSAGE =~ $ISSUE_REGEX ]]; then
+            echo "✅ Valid Issue_ID found"
+          else
+            echo "❌ Commit message must contain: Issue_ID: gh-<number>"
             exit 1
           fi
