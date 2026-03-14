@@ -1,21 +1,19 @@
-# Use a lightweight Node.js image
-FROM node:20-alpine
+# Stage 1 — build React
+FROM node:20-alpine AS build
 
-# Set the working directory inside the container
 WORKDIR /app
-
-# Copy package.json and package-lock.json first
-# This improves build performance by leveraging Docker cache
 COPY package*.json ./
-
-# Install Node dependencies
 RUN npm install
 
-# Copy the rest of the frontend source code
 COPY . .
+RUN npm run build
 
-# Expose port 3000 (React dev server default)
-EXPOSE 3000
+# Stage 2 — nginx
+FROM nginx:1.25-alpine
 
-# Start React development server
-CMD ["npm", "start"]
+RUN rm -rf /etc/nginx/conf.d/*
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+CMD ["nginx", "-g", "daemon off;"]
